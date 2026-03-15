@@ -1,0 +1,31 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+actor "사용자" as User
+
+rectangle "OrderMgtSystem" {
+  usecase "주문 생성" as CreateOrder
+  usecase "주문 취소" as CancelOrder
+  usecase "재고 차감" as DecreaseStock
+  usecase "재고 복원" as IncreaseStock
+  usecase "재고 부족 처리" as OutOfStock
+  usecase "이미 취소된 주문 처리" as AlreadyCancelled
+}
+
+User --> CreateOrder
+User --> CancelOrder
+
+CreateOrder .[#2563EB].> DecreaseStock : <<include>>
+CancelOrder .[#2563EB].> IncreaseStock : <<include>>
+
+CreateOrder .[#DC2626].> OutOfStock : <<extend>>
+CancelOrder .[#DC2626].> AlreadyCancelled : <<extend>>
+
+legend right
+  |= 관계 |= 의미 |
+  |<#2563EB> include | 공통/필수 하위 기능 |
+  |<#DC2626> extend | 조건부/예외 확장 기능 |
+endlegend
+@enduml

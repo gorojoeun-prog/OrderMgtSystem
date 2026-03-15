@@ -1,0 +1,46 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+actor "사용자" as Customer
+actor "관리자" as Admin
+
+rectangle "OrderMgtSystem" {
+  usecase "상품 목록 조회" as UC1
+  usecase "상품 상세 조회" as UC2
+  usecase "재고 조회" as UC3
+  usecase "주문 생성" as UC4
+  usecase "주문 조회" as UC5
+  usecase "주문 취소" as UC6
+  usecase "상품 등록" as UC7
+
+  usecase "재고 차감" as I1
+  usecase "재고 복원" as I2
+  usecase "재고 부족 처리" as E1
+  usecase "이미 취소된 주문 처리" as E2
+}
+
+Customer --> UC1
+Customer --> UC2
+Customer --> UC3
+Customer --> UC4
+Customer --> UC5
+Customer --> UC6
+
+Admin --> UC7
+Admin --> UC1
+Admin --> UC3
+
+UC4 .[#2563EB].> I1 : <<include>>
+UC6 .[#2563EB].> I2 : <<include>>
+
+UC4 .[#DC2626].> E1 : <<extend>>
+UC6 .[#DC2626].> E2 : <<extend>>
+
+legend right
+  |= 관계 |= 의미 |
+  |<#2563EB> include | 공통/필수 하위 기능 |
+  |<#DC2626> extend | 조건부/예외 확장 기능 |
+endlegend
+@enduml
