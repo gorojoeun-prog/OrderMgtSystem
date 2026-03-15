@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: ordermgt-system
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/ordermgt}
+    username: ${DB_USERNAME:ordermgt}
+    password: ${DB_PASSWORD:ordermgt}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    defer-datasource-initialization: true
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+  sql:
+    init:
+      mode: always
+
+server:
+  port: 8080
+
+logging:
+  level:
+    org.hibernate.SQL: debug

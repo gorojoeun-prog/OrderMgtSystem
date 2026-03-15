@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주문 관리 시스템</title>
+    <style>
+        :root {
+            --bg-1: #f6f9f8;
+            --bg-2: #edf5f4;
+            --ink: #122224;
+            --muted: #5f7274;
+            --brand: #0e7a64;
+            --brand-strong: #085a4a;
+            --card: rgba(255, 255, 255, 0.86);
+            --line: rgba(14, 122, 100, 0.18);
+            --danger: #b42318;
+            --warn: #b54708;
+            --ok: #067647;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Pretendard", "SUIT", "Noto Sans KR", sans-serif;
+            color: var(--ink);
+            min-height: 100vh;
+            padding: 2rem 1.25rem 2.5rem;
+            background:
+                radial-gradient(circle at 10% 10%, rgba(14, 122, 100, 0.14), transparent 32%),
+                radial-gradient(circle at 95% 5%, rgba(225, 160, 70, 0.16), transparent 28%),
+                linear-gradient(140deg, var(--bg-1), var(--bg-2));
+        }
+
+        .page-shell {
+            max-width: 1040px;
+            margin: 0 auto;
+        }
+
+        .hero {
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            padding: 1.4rem 1.5rem;
+            backdrop-filter: blur(5px);
+            background: linear-gradient(130deg, rgba(255, 255, 255, 0.92), rgba(242, 251, 248, 0.8));
+            box-shadow: 0 14px 26px rgba(17, 24, 39, 0.07);
+            margin-bottom: 1.4rem;
+            animation: rise-up 420ms ease-out;
+        }
+
+        .eyebrow {
+            display: inline-block;
+            margin-bottom: 0.55rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            font-size: 0.72rem;
+            color: var(--brand);
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            font-size: clamp(1.5rem, 2.6vw, 2.25rem);
+            line-height: 1.2;
+            letter-spacing: -0.015em;
+            margin-bottom: 0.35rem;
+        }
+
+        .hero p {
+            font-size: 0.97rem;
+            color: var(--muted);
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .product-card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 0.82rem;
+            padding: 1.1rem;
+            border-radius: 16px;
+            border: 1px solid var(--line);
+            background: var(--card);
+            box-shadow: 0 10px 20px rgba(16, 24, 40, 0.08);
+            transition: transform 160ms ease, box-shadow 180ms ease;
+            animation: rise-up 480ms ease-out both;
+        }
+
+        .product-card::before {
+            content: "";
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 4px;
+            border-radius: 16px 16px 0 0;
+            background: linear-gradient(90deg, #14b89f, #e6b447);
+        }
+
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 26px rgba(16, 24, 40, 0.11);
+        }
+
+        .product-card:nth-child(1) { animation-delay: 40ms; }
+        .product-card:nth-child(2) { animation-delay: 80ms; }
+        .product-card:nth-child(3) { animation-delay: 120ms; }
+        .product-card:nth-child(4) { animation-delay: 160ms; }
+
+        .product-name {
+            font-size: 1.12rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        .product-price {
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+            color: var(--brand-strong);
+        }
+
+        .stock-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.28rem 0.68rem;
+            border-radius: 999px;
+            font-size: 0.79rem;
+            font-weight: 700;
+            background: rgba(6, 118, 71, 0.13);
+            color: var(--ok);
+        }
+
+        .stock-badge.low {
+            background: rgba(181, 71, 8, 0.12);
+            color: var(--warn);
+        }
+
+        .stock-badge.out {
+            background: rgba(180, 35, 24, 0.12);
+            color: var(--danger);
+        }
+
+        .order-row {
+            display: grid;
+            grid-template-columns: 78px 1fr;
+            gap: 0.55rem;
+            margin-top: auto;
+        }
+
+        .qty-input {
+            width: 100%;
+            padding: 0.55rem 0.45rem;
+            border-radius: 10px;
+            border: 1px solid rgba(17, 24, 39, 0.16);
+            background: rgba(255, 255, 255, 0.9);
+            text-align: center;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--ink);
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .qty-input:focus {
+            border-color: var(--brand);
+            box-shadow: 0 0 0 3px rgba(14, 122, 100, 0.15);
+        }
+
+        .order-btn {
+            border: 0;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #0e7a64, #0a6a57);
+            color: #ffffff;
+            padding: 0.56rem 0.8rem;
+            font-size: 0.94rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            cursor: pointer;
+            transition: transform 130ms ease, filter 180ms ease, opacity 180ms ease;
+        }
+
+        .order-btn:hover:not(:disabled) {
+            filter: brightness(1.06);
+            transform: translateY(-1px);
+        }
+
+        .order-btn:disabled {
+            opacity: 0.62;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .empty-products {
+            text-align: center;
+            color: var(--muted);
+            margin-top: 2.5rem;
+        }
+
+        #toast {
+            position: fixed;
+            left: 50%;
+            bottom: 1.7rem;
+            transform: translateX(-50%) translateY(54px);
+            min-width: 260px;
+            max-width: 460px;
+            padding: 0.95rem 1.25rem;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 0.92rem;
+            font-weight: 600;
+            white-space: pre-line;
+            text-align: center;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 220ms ease, opacity 220ms ease;
+            z-index: 9999;
+        }
+
+        #toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        #toast.success { background: linear-gradient(135deg, #067647, #0b8f58); }
+        #toast.error   { background: linear-gradient(135deg, #b42318, #d92d20); }
+
+        @keyframes rise-up {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 1rem 0.85rem 1.7rem;
+            }
+
+            .hero {
+                padding: 1.1rem;
+                border-radius: 16px;
+            }
+
+            .product-grid {
+                gap: 0.82rem;
+            }
+
+            .product-card {
+                padding: 0.95rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page-shell">
+<header class="hero">
+    <span class="eyebrow">Order Management Demo</span>
+    <h1>상품 주문 페이지</h1>
+    <p>원하는 상품과 수량을 선택한 뒤 주문하기를 눌러 실제 API 동작을 확인해보세요.</p>
+</header>
+
+<main>
+    <!-- 상품이 없는 경우 -->
+    <p th:if="${#lists.isEmpty(products)}"
+       class="empty-products">
+        등록된 상품이 없습니다.
+    </p>
+
+    <!-- 상품 카드 목록 -->
+    <div class="product-grid" th:unless="${#lists.isEmpty(products)}">
+        <div class="product-card"
+             th:each="product : ${products}"
+             th:data-product-id="${product.productId}">
+
+            <!-- 상품명 -->
+            <div class="product-name" th:text="${product.name}">상품명</div>
+
+            <!-- 가격 -->
+            <div class="product-price"
+                 th:text="${#numbers.formatDecimal(product.price, 1, 'COMMA', 0, 'POINT') + '원'}">
+                0원
+            </div>
+
+            <!-- 재고 배지 -->
+            <div>
+                <span class="stock-badge"
+                      th:classappend="${product.stockQuantity == 0 ? 'out' : (product.stockQuantity <= 5 ? 'low' : '')}"
+                      th:text="'재고 ' + ${product.stockQuantity} + '개'">
+                    재고 0개
+                </span>
+            </div>
+
+            <!-- 주문 입력 영역 -->
+            <div class="order-row">
+                <input class="qty-input"
+                       type="number"
+                       min="1"
+                       th:max="${product.stockQuantity}"
+                       value="1"
+                       th:disabled="${product.stockQuantity == 0}"
+                       aria-label="주문 수량"/>
+
+                <button class="order-btn"
+                        th:disabled="${product.stockQuantity == 0}"
+                        th:text="${product.stockQuantity == 0 ? '품절' : '주문하기'}"
+                        th:data-product-id="${product.productId}"
+                        th:data-product-name="${product.name}"
+                        onclick="placeOrder(this)">
+                    주문하기
+                </button>
+            </div>
+        </div>
+    </div>
+</main>
+</div>
+
+<!-- 토스트 알림 -->
+<div id="toast" role="alert" aria-live="assertive"></div>
+
+<script>
+    /**
+     * 주문하기 버튼 클릭 핸들러
+     * @param {HTMLButtonElement} btn - 클릭된 버튼 요소
+     */
+    async function placeOrder(btn) {
+        const productId   = Number(btn.dataset.productId);
+        const productName = btn.dataset.productName;
+        const card        = btn.closest('.product-card');
+        const qtyInput    = card.querySelector('.qty-input');
+        const quantity    = parseInt(qtyInput.value, 10);
+
+        // 클라이언트 검증
+        if (!quantity || quantity < 1) {
+            showToast('수량을 1개 이상 입력해주세요.', 'error');
+            qtyInput.focus();
+            return;
+        }
+
+        // 버튼 비활성화 (중복 클릭 방지)
+        btn.disabled = true;
+        const originalText = btn.textContent;
+        btn.textContent = '처리 중...';
+
+        try {
+            const response = await fetch('/api/orders', {
+                method : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body   : JSON.stringify({ productId, quantity })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // 성공: 주문 번호, 총 금액 표시
+                const total = data.totalPrice.toLocaleString('ko-KR');
+                showToast(
+                    `✅ [${productName}] ${quantity}개 주문 완료!\n주문 번호: #${data.orderId}  |  결제 금액: ${total}원`,
+                    'success'
+                );
+                // 재고 뱃지 새로고침을 위해 페이지 재갱신
+                setTimeout(() => location.reload(), 1800);
+            } else {
+                // 실패: 서버 오류 메시지 표시 (예: 재고 부족)
+                const message = data.message || data.error || '주문 처리 중 오류가 발생했습니다.';
+                showToast(`❌ 주문 실패: ${message}`, 'error');
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        } catch (err) {
+            // 네트워크 오류
+            showToast('❌ 서버와 통신할 수 없습니다. 잠시 후 다시 시도해주세요.', 'error');
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    }
+
+    /**
+     * 하단 토스트 알림 표시
+     * @param {string}  message  - 표시할 메시지
+     * @param {'success'|'error'} type - 알림 종류
+     */
+    function showToast(message, type) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = `show ${type}`;
+
+        clearTimeout(toast._hideTimer);
+        toast._hideTimer = setTimeout(() => {
+            toast.className = '';
+        }, type === 'success' ? 2000 : 3500);
+    }
+</script>
+
+</body>
+</html>
