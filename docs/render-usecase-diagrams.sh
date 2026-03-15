@@ -30,10 +30,30 @@ render_with_docker() {
     -tsvg /workspace/docs/usecase-simple.puml /workspace/docs/usecase-full.puml
 }
 
+render_with_kroki() {
+  echo "[INFO] Kroki API(curl)로 렌더링합니다."
+  for f in "$DOCS_DIR"/usecase-*.puml; do
+    base_name="$(basename "$f" .puml)"
+    curl -fsSL -X POST \
+      -H "Content-Type: text/plain" \
+      --data-binary @"$f" \
+      "https://kroki.io/plantuml/svg" \
+      -o "$OUT_DIR/$base_name.svg"
+
+    curl -fsSL -X POST \
+      -H "Content-Type: text/plain" \
+      --data-binary @"$f" \
+      "https://kroki.io/plantuml/png" \
+      -o "$OUT_DIR/$base_name.png"
+  done
+}
+
 if command -v plantuml >/dev/null 2>&1; then
   render_with_plantuml_cmd
 elif command -v docker >/dev/null 2>&1; then
   render_with_docker
+elif command -v curl >/dev/null 2>&1; then
+  render_with_kroki
 else
   echo "[ERROR] plantuml 또는 docker 명령을 찾을 수 없습니다."
   echo "        다음 중 하나를 준비한 뒤 다시 실행하세요:"
